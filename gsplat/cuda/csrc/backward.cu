@@ -37,7 +37,8 @@ __global__ void nd_rasterize_backward_kernel(
     float2* __restrict__ v_xy,
     float3* __restrict__ v_conic,
     float* __restrict__ v_rgb,
-    float* __restrict__ v_opacity
+    float* __restrict__ v_opacity,
+    float* __restrict__ v_background
 ) {
     auto block = cg::this_thread_block();
     const int tr = block.thread_rank();
@@ -59,6 +60,11 @@ __global__ void nd_rasterize_backward_kernel(
     float T_final = final_Ts[pix_id];
     float T = T_final;
     // the contribution from gaussians behind the current one
+
+    #pragma unroll
+    for(int c=0; c<channels; ++c){
+        v_background[channels * pix_id + c] = T_final * v_out[c];
+    }
     
     extern __shared__ half workspace[];
 
@@ -149,7 +155,8 @@ __global__ void rasterize_backward_kernel(
     float2* __restrict__ v_xy,
     float3* __restrict__ v_conic,
     float3* __restrict__ v_rgb,
-    float* __restrict__ v_opacity
+    float* __restrict__ v_opacity,
+    float3* __restrict__ v_background
 ) {
     auto block = cg::this_thread_block();
     int32_t tile_id =
@@ -190,6 +197,10 @@ __global__ void rasterize_backward_kernel(
     // df/d_out for this pixel
     const float3 v_out = v_output[pix_id];
     const float v_out_alpha = v_output_alpha[pix_id];
+    
+    // update v_background
+    float3 v_back_pixel = {T_final * v_out.x, T_final * v_out.y, T_final * v_out.z};
+    v_background[pix_id] = v_back_pixel;
 
     // collect and process batches of gaussians
     // each thread loads one gaussian at a time before rasterizing

@@ -48,7 +48,8 @@ __global__ void nd_rasterize_backward_kernel(
     float2* __restrict__ v_xy,
     float3* __restrict__ v_conic,
     float* __restrict__ v_rgb,
-    float* __restrict__ v_opacity
+    float* __restrict__ v_opacity,
+    float* __restrict__ v_background
 );
 
 __global__ void rasterize_backward_kernel(
@@ -68,7 +69,8 @@ __global__ void rasterize_backward_kernel(
     float2* __restrict__ v_xy,
     float3* __restrict__ v_conic,
     float3* __restrict__ v_rgb,
-    float* __restrict__ v_opacity
+    float* __restrict__ v_opacity,
+    float3* __restrict__ v_background
 );
 
 __device__ void project_cov3d_ewa_vjp(

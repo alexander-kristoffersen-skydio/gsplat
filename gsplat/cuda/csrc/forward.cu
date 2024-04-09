@@ -288,7 +288,7 @@ __global__ void nd_rasterize_forward(
         final_index[pix_id] = cur_idx; // index of in bin of last gaussian in this pixel
         #pragma unroll
         for (int c = 0; c < channels; ++c) {
-            out_img[pix_id * channels + c] = __half2float(pix_out[c]) + T * background[c];
+            out_img[pix_id * channels + c] = __half2float(pix_out[c]) + T * background[pix_id * channels + c];
         }
     }
 }
@@ -305,7 +305,7 @@ __global__ void rasterize_forward(
     float* __restrict__ final_Ts,
     int* __restrict__ final_index,
     float3* __restrict__ out_img,
-    const float3& __restrict__ background
+    const float3* __restrict__ background
 ) {
     // each thread draws one pixel, but also timeshares caching gaussians in a
     // shared tile
@@ -411,9 +411,9 @@ __global__ void rasterize_forward(
         final_index[pix_id] =
             cur_idx; // index of in bin of last gaussian in this pixel
         float3 final_color;
-        final_color.x = pix_out.x + T * background.x;
-        final_color.y = pix_out.y + T * background.y;
-        final_color.z = pix_out.z + T * background.z;
+        final_color.x = pix_out.x + T * background[pix_id].x;
+        final_color.y = pix_out.y + T * background[pix_id].y;
+        final_color.z = pix_out.z + T * background[pix_id].z;
         out_img[pix_id] = final_color;
     }
 }

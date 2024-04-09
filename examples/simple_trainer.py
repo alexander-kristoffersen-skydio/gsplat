@@ -73,6 +73,7 @@ class SimpleTrainer:
         self.rgbs.requires_grad = True
         self.opacities.requires_grad = True
         self.viewmat.requires_grad = False
+        self.background.requires_grad = True
 
     def train(
         self,
@@ -82,7 +83,15 @@ class SimpleTrainer:
         B_SIZE: int = 14,
     ):
         optimizer = optim.Adam(
-            [self.rgbs, self.means, self.scales, self.opacities, self.quats], lr
+            [
+                self.rgbs,
+                self.means,
+                self.scales,
+                self.opacities,
+                self.quats,
+                self.background,
+            ],
+            lr,
         )
         mse_loss = torch.nn.MSELoss()
         frames = []

@@ -149,7 +149,8 @@ std::
         torch::Tensor, // dL_dxy
         torch::Tensor, // dL_dconic
         torch::Tensor, // dL_dcolors
-        torch::Tensor  // dL_dopacity
+        torch::Tensor, // dL_dopacity
+        torch::Tensor  // dL_dbackground
         >
     nd_rasterize_backward_tensor(
         const unsigned img_height,
@@ -173,7 +174,8 @@ std::
         torch::Tensor, // dL_dxy
         torch::Tensor, // dL_dconic
         torch::Tensor, // dL_dcolors
-        torch::Tensor  // dL_dopacity
+        torch::Tensor, // dL_dopacity
+        torch::Tensor  // dL_dbackground
         >
     rasterize_backward_tensor(
         const unsigned img_height,

@@ -406,7 +406,7 @@ rasterize_forward_tensor(
         final_Ts.contiguous().data_ptr<float>(),
         final_idx.contiguous().data_ptr<int>(),
         (float3 *)out_img.contiguous().data_ptr<float>(),
-        *(float3 *)background.contiguous().data_ptr<float>()
+        (float3 *)background.contiguous().data_ptr<float>()
     );
 
     return std::make_tuple(out_img, final_Ts, final_idx);
@@ -495,7 +495,8 @@ std::
         torch::Tensor, // dL_dxy
         torch::Tensor, // dL_dconic
         torch::Tensor, // dL_dcolors
-        torch::Tensor  // dL_dopacity
+        torch::Tensor, // dL_dopacity
+        torch::Tensor  // dL_dbackground
         >
     nd_rasterize_backward_tensor(
         const unsigned img_height,
@@ -540,6 +541,8 @@ std::
     torch::Tensor v_colors =
         torch::zeros({num_points, channels}, xys.options());
     torch::Tensor v_opacity = torch::zeros({num_points, 1}, xys.options());
+    torch::Tensor v_background =
+        torch::zeros({img_height, img_width, channels}, xys.options());
 
     const int B = block.x * block.y;
     //shared mem accounts for each thread having a local shared memory workspace for running sum
@@ -565,10 +568,11 @@ std::
         (float2 *)v_xy.contiguous().data_ptr<float>(),
         (float3 *)v_conic.contiguous().data_ptr<float>(),
         v_colors.contiguous().data_ptr<float>(),
-        v_opacity.contiguous().data_ptr<float>()
+        v_opacity.contiguous().data_ptr<float>(),
+        v_background.contiguous().data_ptr<float>()
     );
 
-    return std::make_tuple(v_xy, v_conic, v_colors, v_opacity);
+    return std::make_tuple(v_xy, v_conic, v_colors, v_opacity, v_background);
 }
 
 std::
@@ -576,7 +580,8 @@ std::
         torch::Tensor, // dL_dxy
         torch::Tensor, // dL_dconic
         torch::Tensor, // dL_dcolors
-        torch::Tensor  // dL_dopacity
+        torch::Tensor, // dL_dopacity
+        torch::Tensor  // dL_dbackground
         >
     rasterize_backward_tensor(
         const unsigned img_height,
@@ -621,6 +626,8 @@ std::
     torch::Tensor v_colors =
         torch::zeros({num_points, channels}, xys.options());
     torch::Tensor v_opacity = torch::zeros({num_points, 1}, xys.options());
+    torch::Tensor v_background =
+        torch::zeros({img_height, img_width, channels}, xys.options());
 
     rasterize_backward_kernel<<<tile_bounds, block>>>(
         tile_bounds,
@@ -639,8 +646,9 @@ std::
         (float2 *)v_xy.contiguous().data_ptr<float>(),
         (float3 *)v_conic.contiguous().data_ptr<float>(),
         (float3 *)v_colors.contiguous().data_ptr<float>(),
-        v_opacity.contiguous().data_ptr<float>()
+        v_opacity.contiguous().data_ptr<float>(),
+        (float3 *)v_background.contiguous().data_ptr<float>()
     );
 
-    return std::make_tuple(v_xy, v_conic, v_colors, v_opacity);
+    return std::make_tuple(v_xy, v_conic, v_colors, v_opacity, v_background);
 }
